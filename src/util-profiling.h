@@ -45,7 +45,7 @@ extern thread_local int profiling_keyword_entered;
 
 #define KEYWORD_PROFILING_SET_LIST(ctx, list) { \
     (ctx)->keyword_perf_list = (list); \
-}
+    }
 
 #define KEYWORD_PROFILING_START                                                                    \
     uint64_t profile_keyword_start_ = 0;                                                           \
@@ -108,18 +108,18 @@ PktProfiling *SCProfilePacketStart(void);
     } while (0)
 
 #define PACKET_PROFILING_COPY_LOCKS(p, id) do {                     \
-            (p)->profile->tmm[(id)].mutex_lock_cnt = mutex_lock_cnt;                \
-            (p)->profile->tmm[(id)].mutex_lock_wait_ticks = mutex_lock_wait_ticks;  \
-            (p)->profile->tmm[(id)].mutex_lock_contention = mutex_lock_contention;  \
-            (p)->profile->tmm[(id)].spin_lock_cnt = spin_lock_cnt;                  \
-            (p)->profile->tmm[(id)].spin_lock_wait_ticks = spin_lock_wait_ticks;    \
-            (p)->profile->tmm[(id)].spin_lock_contention = spin_lock_contention;    \
-            (p)->profile->tmm[(id)].rww_lock_cnt = rww_lock_cnt;                    \
-            (p)->profile->tmm[(id)].rww_lock_wait_ticks = rww_lock_wait_ticks;      \
-            (p)->profile->tmm[(id)].rww_lock_contention = rww_lock_contention;      \
-            (p)->profile->tmm[(id)].rwr_lock_cnt = rwr_lock_cnt;                    \
-            (p)->profile->tmm[(id)].rwr_lock_wait_ticks = rwr_lock_wait_ticks;      \
-            (p)->profile->tmm[(id)].rwr_lock_contention = rwr_lock_contention;      \
+        (p)->profile->tmm[(id)].mutex_lock_cnt = mutex_lock_cnt;                \
+        (p)->profile->tmm[(id)].mutex_lock_wait_ticks = mutex_lock_wait_ticks;  \
+        (p)->profile->tmm[(id)].mutex_lock_contention = mutex_lock_contention;  \
+        (p)->profile->tmm[(id)].spin_lock_cnt = spin_lock_cnt;                  \
+        (p)->profile->tmm[(id)].spin_lock_wait_ticks = spin_lock_wait_ticks;    \
+        (p)->profile->tmm[(id)].spin_lock_contention = spin_lock_contention;    \
+        (p)->profile->tmm[(id)].rww_lock_cnt = rww_lock_cnt;                    \
+        (p)->profile->tmm[(id)].rww_lock_wait_ticks = rww_lock_wait_ticks;      \
+        (p)->profile->tmm[(id)].rww_lock_contention = rww_lock_contention;      \
+        (p)->profile->tmm[(id)].rwr_lock_cnt = rwr_lock_cnt;                    \
+        (p)->profile->tmm[(id)].rwr_lock_wait_ticks = rwr_lock_wait_ticks;      \
+        (p)->profile->tmm[(id)].rwr_lock_contention = rwr_lock_contention;      \
         record_locks = 0;                                                           \
         SCProfilingAddPacketLocks((p));                                             \
     } while(0)
@@ -189,7 +189,7 @@ PktProfiling *SCProfilePacketStart(void);
         (dp)->proto_detect_ticks_end = UtilCpuGetTicks();           \
         if ((dp)->proto_detect_ticks_start != 0 && (dp)->proto_detect_ticks_start < ((dp)->proto_detect_ticks_end)) {  \
             (dp)->proto_detect_ticks_spent =                        \
-                ((dp)->proto_detect_ticks_end - (dp)->proto_detect_ticks_start);  \
+                    ((dp)->proto_detect_ticks_end - (dp)->proto_detect_ticks_start);  \
         }                                                           \
     }
 
@@ -226,7 +226,7 @@ PktProfiling *SCProfilePacketStart(void);
             if ((p)->profile->detect[(id)].ticks_start != 0 &&       \
                     (p)->profile->detect[(id)].ticks_start < (p)->profile->detect[(id)].ticks_end) {  \
                 (p)->profile->detect[(id)].ticks_spent +=            \
-                ((p)->profile->detect[(id)].ticks_end - (p)->profile->detect[(id)].ticks_start);  \
+                        ((p)->profile->detect[(id)].ticks_end - (p)->profile->detect[(id)].ticks_start);  \
             }                                                       \
         }                                                           \
     }
@@ -245,7 +245,7 @@ PktProfiling *SCProfilePacketStart(void);
             if ((p)->profile->logger[(id)].ticks_start != 0 &&       \
                     (p)->profile->logger[(id)].ticks_start < (p)->profile->logger[(id)].ticks_end) {  \
                 (p)->profile->logger[(id)].ticks_spent +=            \
-                ((p)->profile->logger[(id)].ticks_end - (p)->profile->logger[(id)].ticks_start);  \
+                        ((p)->profile->logger[(id)].ticks_end - (p)->profile->logger[(id)].ticks_start);  \
             }                                                       \
         }                                                           \
     }
@@ -253,7 +253,7 @@ PktProfiling *SCProfilePacketStart(void);
 #define SGH_PROFILING_RECORD(det_ctx, sgh)                          \
     if (profiling_sghs_enabled) {                                   \
         SCProfilingSghUpdateCounter((det_ctx), (sgh));              \
-    }
+}
 
 extern int profiling_prefilter_enabled;
 extern thread_local int profiling_prefilter_entered;
@@ -274,13 +274,17 @@ extern thread_local int profiling_prefilter_entered;
 
 /* we allow this macro to be called if profiling_prefilter_entered == 0,
  * so that we don't have to refactor some of the detection code. */
-#define PREFILTER_PROFILING_END(ctx, profile_id)                                                   \
+#define PREFILTER_PROFILING_END(ctx, profile_id, sgh)                                              \
     if (profiling_prefilter_enabled && profiling_prefilter_entered) {                              \
         profile_prefilter_end_ = UtilCpuGetTicks();                                                \
-        if (profile_prefilter_end_ > profile_prefilter_start_)                                     \
+        if (profile_prefilter_end_ > profile_prefilter_start_) {                                   \
             SCProfilingPrefilterUpdateCounter((ctx), (profile_id),                                 \
                     (profile_prefilter_end_ - profile_prefilter_start_), (ctx)->prefilter_bytes,   \
                     (ctx)->prefilter_bytes_called);                                                \
+            SCProfilingSGHPrefilterUpdateCounter((ctx), (profile_id), (sgh),                       \
+                    (profile_prefilter_end_ - profile_prefilter_start_), (ctx)->prefilter_bytes,   \
+                    (ctx)->prefilter_bytes_called);                                                \
+        }                                                                                          \
         profiling_prefilter_entered--;                                                             \
     }
 
@@ -309,6 +313,7 @@ void SCProfilingPrefilterDestroyCtx(DetectEngineCtx *);
 void SCProfilingPrefilterInitCounters(DetectEngineCtx *);
 void SCProfilingPrefilterUpdateCounter(DetectEngineThreadCtx *det_ctx, int id, uint64_t ticks,
         uint64_t bytes, uint64_t bytes_called);
+void SCProfilingSGHPrefilterUpdateCounter(DetectEngineThreadCtx *det_ctx, int id, const SigGroupHead * sgh, uint64_t ticks, uint64_t bytes, uint64_t bytes_called);
 void SCProfilingPrefilterThreadSetup(struct SCProfilePrefilterDetectCtx_ *, DetectEngineThreadCtx *);
 void SCProfilingPrefilterThreadCleanup(DetectEngineThreadCtx *);
 
@@ -316,6 +321,9 @@ void SCProfilingSghsGlobalInit(void);
 void SCProfilingSghDestroyCtx(DetectEngineCtx *);
 void SCProfilingSghInitCounters(DetectEngineCtx *);
 void SCProfilingSghUpdateCounter(DetectEngineThreadCtx *det_ctx, const SigGroupHead *sgh);
+void SCProfilingSghUpdateMPMCounters(DetectEngineThreadCtx *det_ctx, const SigGroupHead *sgh);
+void SCProfilingSghUpdateSizeDist(DetectEngineThreadCtx *det_ctx, const SigGroupHead * sgh,
+        uint64_t size);
 void SCProfilingSghThreadSetup(struct SCProfileSghDetectCtx_ *, DetectEngineThreadCtx *);
 void SCProfilingSghThreadCleanup(DetectEngineThreadCtx *);
 
@@ -359,7 +367,7 @@ void SCProfilingDump(void);
 #define FLOWWORKER_PROFILING_END(p, id)
 
 #define PREFILTER_PROFILING_START(ctx)
-#define PREFILTER_PROFILING_END(ctx, profile_id)
+#define PREFILTER_PROFILING_END(ctx, profile_id, sgh)
 #define PREFILTER_PROFILING_ADD_BYTES(det_ctx, bytes)
 
 #endif /* PROFILING */
